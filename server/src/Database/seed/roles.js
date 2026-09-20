@@ -1,4 +1,4 @@
-import { db } from "../index.js";
+import { db, pool } from "../index.js";
 import { platformRoles } from "../schema.js";
 
 async function seedRoles() {
@@ -7,22 +7,26 @@ async function seedRoles() {
   const roles = [{ name: "admin" }, { name: "user" }];
 
   const existingRoles = await db.select().from(platformRoles);
-  if (
-    existingRoles.some((role) => role.name === "admin" || role.name === "user")
-  ) {
-    console.log("Roles already exist");
-    return;
-  }
 
   for (const role of roles) {
-    await db.insert(platformRoles).values(role);
+    const exists = existingRoles.some(
+      (existingRole) => existingRole.name === role.name,
+    );
+
+    if (!exists) {
+      await db.insert(platformRoles).values(role);
+      console.log(`Role "${role.name}" created`);
+    }
   }
 
   console.log("Roles seeded successfully");
-  return;
 }
 
-seedRoles().catch((error) => {
-  console.error("Error seeding roles:", error);
-  process.exit(1);
-});
+seedRoles()
+  .catch((error) => {
+    console.error("Error seeding roles:", error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await pool.end();
+  });
