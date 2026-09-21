@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+import orderRoutes from "./Routes/orderRoutes.js";
+
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 
 const app = express();
@@ -14,5 +16,7 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use("/api/order", orderRoutes);
 
 export default app;
