@@ -7,7 +7,7 @@ import redisClient from "../Utils/redisClient.js";
 export const generateCSRFToken = async (id, sessionId, res) => {
   const csrfToken = crypto.randomBytes(16).toString("hex");
   const csrfTokenKey = `csrf:${id}:${sessionId}`;
-  
+
   await redisClient.set(csrfTokenKey, csrfToken, {
     EX: 60 * 60, // 1 hour expiration
   });
@@ -104,4 +104,4 @@ export const refreshCSRFToken = async (id, sessionId, res) => {
 export const generateCsrfToken = generateCSRFToken;
 export const verifyCsrfToken = verifyCSRFToken;
 export const revokeCsrfToken = revokeCSRFToken;
-export const refreshCsrfToken = refreshCSRFToken;
+export const refreshCsrfToken = refreshCSRFToken;

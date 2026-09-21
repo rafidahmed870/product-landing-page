@@ -5,7 +5,9 @@ import { generateCSRFToken } from "./csrfToken.js";
 
 const APP_SECRET = process.env.APP_SECRET ?? process.env.SERVER_SECRET ?? null;
 if (!APP_SECRET) {
-  throw new Error("APP_SECRET or SERVER_SECRET is not defined in the environment variables.");
+  throw new Error(
+    "APP_SECRET or SERVER_SECRET is not defined in the environment variables.",
+  );
 }
 
 /**
@@ -68,7 +70,12 @@ export const generateToken = async (id, tokenVersion, res) => {
 export const verifyRefreshToken = async (refreshToken) => {
   try {
     const decoded = jwt.verify(refreshToken, APP_SECRET);
-    if (!decoded || !decoded.id || decoded.tokenVersion === undefined || !decoded.sessionId) {
+    if (
+      !decoded ||
+      !decoded.id ||
+      decoded.tokenVersion === undefined ||
+      !decoded.sessionId
+    ) {
       return null;
     }
 
@@ -117,4 +124,4 @@ export const generateAccessToken = async (id, sessionId, tokenVersion, res) => {
 export const revokeRefreshToken = async (id, sessionId) => {
   const refreshTokenKey = `refresh:${id}:${sessionId}`;
   await redisClient.del(refreshTokenKey);
-};
+};

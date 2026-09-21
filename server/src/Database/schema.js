@@ -32,3 +32,21 @@ export const users = pgTable("users", {
     .notNull()
     .$onUpdate(() => new Date()),
 });
+
+export const orders = pgTable("orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  productName: varchar("product_name", { length: 100 }).notNull(),
+  qty: integer("qty").notNull(),
+  fullName: varchar("full_name", { length: 50 }).notNull(),
+  email: varchar("email", { length: 50 }).notNull(),
+  phone: varchar("phone", { length: 15 }).notNull(),
+  address: text("address").notNull(),
+  status: pgEnum("status", ["pending", "confirmed", "cancelled"])
+    .default("pending")
+    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+});
