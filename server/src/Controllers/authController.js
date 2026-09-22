@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { TryCatch } from "../Middlewares/tryCatch.js";
 import { getUserByEmail, getUserById } from "../Services/userServices.js";
+import { formatZodError, loginSchema } from "../Utils/zod.js";
 import {
   generateToken,
   generateAccessToken,
@@ -11,13 +12,15 @@ import { revokeCSRFToken, refreshCSRFToken } from "../Config/csrfToken.js";
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 export const login = TryCatch(async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
+  const validation = loginSchema.safeParse(req.body);
+  if (!validation.success) {
+    const { firstError, allErrors } = formatZodError(validation.error);
     return res
       .status(400)
-      .json({ success: false, message: "Email and password are required" });
+      .json({ success: false, message: firstError, errors: allErrors });
   }
+
+  const { email, password } = validation.data;
 
   const user = await getUserByEmail(email);
   if (!user) {

@@ -8,11 +8,12 @@ import {
 } from "../Controllers/ordersController.js";
 import { authMiddleware } from "../Middlewares/authMiddleware.js";
 import { verifyCSRFToken } from "../Config/csrfToken.js";
+import { orderRateLimiter } from "../Middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 // ─── Public ───────────────────────────────────────────────────────────────────
-router.post("/create-order", createOrder);
+router.post("/create-order", orderRateLimiter, createOrder);
 
 // ─── Admin (Protected + CSRF verified) ───────────────────────────────────────
 // GET routes: CSRF skipped automatically by verifyCSRFToken

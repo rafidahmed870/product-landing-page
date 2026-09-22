@@ -10,6 +10,8 @@ import {
   Phone,
   MapPin,
   Sparkles,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import productImg from "../../assets/balaclava-gallery-1.png";
 import {
@@ -18,43 +20,93 @@ import {
   DC_INSIDE_DHAKA,
   DC_OUTSIDE_DHAKA,
 } from "../../lib/constants";
+import { api } from "../../lib/api";
 
 function Order() {
   const [quantity, setQuantity] = useState(1);
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    address: "",
-    note: "",
-    deliveryLocation: "inside",
-  });
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [email, setEmail] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState("inside");
 
+  const [submitting, setSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const unitPrice = PRODUCT_DISCOUNT_PRICE;
   const deliveryCharge =
-    formData.deliveryLocation === "inside" ? DC_INSIDE_DHAKA : DC_OUTSIDE_DHAKA;
+    deliveryLocation === "inside" ? DC_INSIDE_DHAKA : DC_OUTSIDE_DHAKA;
   const subtotal = unitPrice * quantity;
   const totalPrice = subtotal + deliveryCharge;
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.address) {
-      alert("অনুগ্রহ করে আপনার নাম, মোবাইল নম্বর এবং ঠিকানা পূরণ করুন।");
+    setErrorMsg("");
+
+    if (!name || !phone || !address) {
+      setErrorMsg("অনুগ্রহ করে আপনার নাম, মোবাইল নম্বর এবং ঠিকানা পূরণ করুন।");
       return;
     }
-    setIsSubmitted(true);
+
+    const phoneClean = phone.trim();
+    if (!/^(?:01[3-9]\d{8}|\+8801[3-9]\d{8})$/.test(phoneClean)) {
+      setErrorMsg("সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 01712345678)");
+      return;
+    }
+
+    if (address.trim().length < 6) {
+      setErrorMsg("কমপক্ষে ৬ অক্ষরের সম্পূর্ণ ঠিকানা দিন।");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const payload = {
+        productName: "প্রিমিয়াম ট্যাকটিক্যাল বালাক্লাভা মাস্ক",
+        qty: quantity,
+        fullName: name.trim(),
+        phone: phoneClean,
+        address: `${address.trim()} (${deliveryLocation === "inside" ? "ঢাকার ভেতরে" : "ঢাকার বাইরে"})`,
+        email: email.trim() || undefined,
+      };
+
+      const res = await api.post("/order/create-order", payload);
+      if (res.data?.success) {
+        setIsSubmitted(true);
+      } else {
+        setErrorMsg(res.data?.message || "অর্ডার ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+      }
+    } catch (err) {
+      if (err?.response?.status === 429) {
+        setErrorMsg("⚠️ অনুগ্রহ করে ৩০ সেকেন্ড পর আবার চেষ্টা করুন।");
+      } else {
+        setErrorMsg(
+          err?.response?.data?.message ||
+            "অর্ডার সম্পন্ন হতে সমস্যা হয়েছে। ইন্টারনেট চেক করে আবার চেষ্টা করুন।"
+        );
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReset = () => {
+    setIsSubmitted(false);
+    setName("");
+    setPhone("");
+    setAddress("");
+    setEmail("");
+    setDeliveryLocation("inside");
+    setQuantity(1);
+    setErrorMsg("");
   };
 
   return (
     <section
       id="order"
-      className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-indigo-50/40 via-white to-slate-50  border-t border-gray-200/70"
+      className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-indigo-50/40 via-white to-slate-50 border-t border-gray-200/70"
     >
       {/* Glow effect */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#6C5CE7]/10 rounded-full blur-[130px] pointer-events-none" />
@@ -88,17 +140,17 @@ function Order() {
               আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে!
             </h3>
             <p className="text-sm text-slate-600 mt-2">
-              ধন্যবাদ <span className="font-semibold text-[#1A1953]">{formData.name}</span>, আমাদের প্রতিনিধি খুব শীঘ্রই আপনার কল করে অর্ডার কনফার্ম করবেন।
+              ধন্যবাদ <span className="font-semibold text-[#1A1953]">{name}</span>, আমাদের প্রতিনিধি খুব শীঘ্রই আপনাকে কল করে অর্ডার কনফার্ম করবেন।
             </p>
 
             <div className="mt-6 p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-left text-xs sm:text-sm space-y-2 text-slate-700">
               <div className="flex justify-between">
                 <span className="text-slate-500">ফোন নম্বর:</span>
-                <span className="font-semibold">{formData.phone}</span>
+                <span className="font-semibold">{phone}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">ডেলিভারি ঠিকানা:</span>
-                <span className="font-semibold">{formData.address}</span>
+                <span className="font-semibold">{address}</span>
               </div>
               <div className="flex justify-between border-t border-indigo-100 pt-2 font-bold text-[#1A1953]">
                 <span>সর্বমোট দেয় (ক্যাশ অন ডেলিভারি):</span>
@@ -107,7 +159,7 @@ function Order() {
             </div>
 
             <button
-              onClick={() => setIsSubmitted(false)}
+              onClick={handleReset}
               className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#6C5CE7] to-[#7B61FF] text-white font-semibold text-sm cursor-pointer shadow-md hover:opacity-95"
             >
               নতুন অর্ডার করুন
@@ -201,6 +253,14 @@ function Order() {
                 ডেলিভারি তথ্য প্রদান করুন
               </h3>
 
+              {/* Error Alert */}
+              {errorMsg && (
+                <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-medium">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
               {/* Full Name */}
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-[#1A1953] mb-1.5">
@@ -210,10 +270,12 @@ function Order() {
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
-                    name="name"
                     required
-                    value={formData.name}
-                    onChange={handleInputChange}
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (errorMsg) setErrorMsg("");
+                    }}
                     placeholder="আপনার নাম লিখুন"
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-[#6C5CE7] focus:ring-2 focus:ring-[#6C5CE7]/20 outline-none transition-all text-sm"
                   />
@@ -229,11 +291,13 @@ function Order() {
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="tel"
-                    name="phone"
                     required
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="১১ ডিজিটের মোবাইল নম্বর"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      if (errorMsg) setErrorMsg("");
+                    }}
+                    placeholder="11 ডিজিটের মোবাইল নম্বর"
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-[#6C5CE7] focus:ring-2 focus:ring-[#6C5CE7]/20 outline-none transition-all text-sm"
                   />
                 </div>
@@ -247,11 +311,13 @@ function Order() {
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
                   <textarea
-                    name="address"
                     rows={2}
                     required
-                    value={formData.address}
-                    onChange={handleInputChange}
+                    value={address}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      if (errorMsg) setErrorMsg("");
+                    }}
                     placeholder="জেলা, থানা, বাসা নং/রোড নং ও এলাকার নাম"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#6C5CE7] focus:ring-2 focus:ring-[#6C5CE7]/20 outline-none transition-all text-sm resize-none"
                   />
@@ -266,7 +332,7 @@ function Order() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label
                     className={`flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                      formData.deliveryLocation === "inside"
+                      deliveryLocation === "inside"
                         ? "border-[#6C5CE7] bg-indigo-50/60 font-semibold text-[#1A1953]"
                         : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                     }`}
@@ -275,8 +341,8 @@ function Order() {
                       type="radio"
                       name="deliveryLocation"
                       value="inside"
-                      checked={formData.deliveryLocation === "inside"}
-                      onChange={handleInputChange}
+                      checked={deliveryLocation === "inside"}
+                      onChange={(e) => setDeliveryLocation(e.target.value)}
                       className="accent-[#6C5CE7]"
                     />
                     <div className="text-xs sm:text-sm">
@@ -287,7 +353,7 @@ function Order() {
 
                   <label
                     className={`flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                      formData.deliveryLocation === "outside"
+                      deliveryLocation === "outside"
                         ? "border-[#6C5CE7] bg-indigo-50/60 font-semibold text-[#1A1953]"
                         : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                     }`}
@@ -296,8 +362,8 @@ function Order() {
                       type="radio"
                       name="deliveryLocation"
                       value="outside"
-                      checked={formData.deliveryLocation === "outside"}
-                      onChange={handleInputChange}
+                      checked={deliveryLocation === "outside"}
+                      onChange={(e) => setDeliveryLocation(e.target.value)}
                       className="accent-[#6C5CE7]"
                     />
                     <div className="text-xs sm:text-sm">
@@ -312,10 +378,20 @@ function Order() {
               <button
                 type="submit"
                 id="submit-order-form-btn"
-                className="w-full mt-4 py-4 rounded-2xl bg-gradient-to-r from-[#6C5CE7] to-[#7B61FF] text-white font-bold text-base sm:text-lg shadow-xl hover:brightness-105 active:scale-98 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                disabled={submitting}
+                className="w-full mt-4 py-4 rounded-2xl bg-gradient-to-r from-[#6C5CE7] to-[#7B61FF] text-white font-bold text-base sm:text-lg shadow-xl hover:brightness-105 active:scale-98 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <ShoppingBag className="w-5 h-5" />
-                <span>অর্ডার নিশ্চিত করুন (৳{totalPrice})</span>
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>অর্ডার প্রসেসিং হচ্ছে...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-5 h-5" />
+                    <span>অর্ডার নিশ্চিত করুন (৳{totalPrice})</span>
+                  </>
+                )}
               </button>
 
               <p className="text-center text-xs text-slate-500 font-medium mt-2">
