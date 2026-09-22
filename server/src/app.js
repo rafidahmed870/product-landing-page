@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import orderRoutes from "./Routes/orderRoutes.js";
+import authRoutes from "./Routes/authRoutes.js";
 
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 
@@ -17,6 +18,7 @@ app.use(
   }),
 );
 
+app.use("/api/auth", authRoutes);
 app.use("/api/order", orderRoutes);
 
 export default app;

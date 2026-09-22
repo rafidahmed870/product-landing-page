@@ -5,7 +5,15 @@ import {
   timestamp,
   text,
   numeric,
+  integer,
+  pgEnum,
 } from "drizzle-orm/pg-core";
+
+export const orderStatusEnum = pgEnum("order_status", [
+  "pending",
+  "confirmed",
+  "cancelled",
+]);
 
 export const platformRoles = pgTable("platform_roles", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -41,9 +49,7 @@ export const orders = pgTable("orders", {
   email: varchar("email", { length: 50 }).notNull(),
   phone: varchar("phone", { length: 15 }).notNull(),
   address: text("address").notNull(),
-  status: pgEnum("status", ["pending", "confirmed", "cancelled"])
-    .default("pending")
-    .notNull(),
+  status: orderStatusEnum("status").default("pending").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

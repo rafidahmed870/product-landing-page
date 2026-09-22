@@ -45,19 +45,17 @@ export const generateToken = async (id, tokenVersion, res) => {
   // Generate corresponding CSRF token
   const csrfToken = await generateCSRFToken(id, sessionId, res);
 
-  const isProduction = process.env.NODE_ENV === "production";
-
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: "strict",
+    secure: true,
+    sameSite: "none",
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: "strict",
+    secure: true,
+    sameSite: "none",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 

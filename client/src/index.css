@@ -1,1 +1,31 @@
 @import "tailwindcss";
+@import "@fontsource/hind-siliguri";
+
+@theme inline {
+  --color-primary: #1A1953;
+  --color-secondary: #6C5CE7;
+  --color-background: #FAFAFD;
+  --font-sans: "Hind Siliguri", sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Swiper Pagination Styling */
+.custom-swiper-pagination .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background-color: #cbd5e1;
+  border-radius: 0;
+  opacity: 1;
+  margin: 0 4px !important;
+  transition: all 0.3s ease;
+}
+
+.custom-swiper-pagination .swiper-pagination-bullet-active {
+  width: 24px;
+  background-color: #1A1953;
+}

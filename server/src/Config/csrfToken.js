@@ -12,12 +12,10 @@ export const generateCSRFToken = async (id, sessionId, res) => {
     EX: 60 * 60, // 1 hour expiration
   });
 
-  const isProduction = process.env.NODE_ENV === "production";
-
   res.cookie("csrfToken", csrfToken, {
     httpOnly: false,
-    secure: isProduction,
-    sameSite: "strict",
+    secure: true,
+    sameSite: "none",
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 
